@@ -1,0 +1,16 @@
+﻿@model WebPortal.Controllers.SubmitToDocumentDb
+
+@{
+    ViewBag.Title = "Azure Bench - DocumentDb";
+}
+
+<h2>DocumentDb</h2>
+
+@using (Ajax.BeginForm("SubmitToDocumentDb", "DocumentDb", new AjaxOptions { HttpMethod = "POST", UpdateTargetId = "result" }))
+{
+    @Html.EditorForModel()
+    <br/>
+    <input type="submit" value="Submit Documents" />
+}
+<br/>
+<div style="white-space: pre-line" id="result"></div>
