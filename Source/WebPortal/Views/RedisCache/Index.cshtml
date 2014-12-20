@@ -1,4 +1,4 @@
-﻿@model WebPortal.Controllers.SubmitToRedisCache
+﻿@model WebPortal.Controllers.RedisBenchView
 
 @{
     ViewBag.Title = "Azure Bench - Redis Cache";
@@ -6,11 +6,18 @@
 
 <h2>Redis Cache</h2>
 
-@using (Ajax.BeginForm("SubmitToRedisCache", "RedisCache", new AjaxOptions { HttpMethod = "POST", UpdateTargetId = "result" }))
+@using (Ajax.BeginForm("StringSet", "RedisCache", new AjaxOptions { HttpMethod = "POST", UpdateTargetId = "result" }))
 {
-    @Html.EditorForModel()
-    <br/>
+    @Html.LabelFor(model  => model.ServiceSettings)
+    @Html.EditorFor(model => model.ServiceSettings)
+    
+    @Html.LabelFor(model  => model.StringSetParameters)
+    @Html.EditorFor(model => model.StringSetParameters)
+    
+    @Html.LabelFor(model  => model.CallSettings)
+    @Html.EditorFor(model => model.CallSettings)
+
     <input type="submit" value="Submit Cache Items" />
 }
-<br/>
-<div style="white-space: pre-line" id="result"></div>
+
+<div id="result"></div>
