@@ -41,41 +41,14 @@ namespace WebPortal.Controllers
             StringSetViewModel              stringSetParameters,
             CallSettingsViewModel           callSettings)
         {
-            try
-            {
-                var redis =
-                    ConnectionMultiplexer.Connect(serviceSettings.ServiceName + ".redis.cache.windows.net,password=" +
-                                                  serviceSettings.ServiceKey);
-                var redisDb = redis.GetDatabase();
-
-                var totalStopWatch = Stopwatch.StartNew();
-
-                Parallel.For(
-                    fromInclusive:      0,
-                    toExclusive:        callSettings.NumberOfRepititions,
-                    parallelOptions:    new ParallelOptions {
-                                            MaxDegreeOfParallelism = callSettings.MaxConcurrentSubmissions
-                                        },
-                    body:               i => redisDb.StringSet(stringSetParameters.Key, stringSetParameters.Value)                                        
-                );
-
-                var totalElapsedMilliseconds    = totalStopWatch.ElapsedMilliseconds;
-                var documentsPerSecond          = callSettings.NumberOfRepititions / (totalElapsedMilliseconds / 1000.0);
-                var averageLatencyMilliseconds  = (double)totalElapsedMilliseconds / callSettings.NumberOfRepititions;
-
-                return string.Format(
-                    "Set {0} items in {1}ms\r\nRate: {2}/sec @ {3}ms/set avg",
-                    callSettings.NumberOfRepititions,
-                    totalElapsedMilliseconds,
-                    documentsPerSecond.ToString("0.00"),
-                    averageLatencyMilliseconds
-                );
-
-            }
-            catch (Exception exception)
-            {
-                return exception.ToString();
-            }
+            return ExecuteRedisFunction(
+                serviceSettings:    serviceSettings,
+                redisFunction:      redisDb => redisDb.StringSet(
+                                        stringSetParameters.Key, 
+                                        stringSetParameters.Value
+                                    ),
+                callSettings:       callSettings
+            );
         }
 
         public
@@ -85,31 +58,52 @@ namespace WebPortal.Controllers
             StringGetViewModel              stringGetParameters,
             CallSettingsViewModel           callSettings)
         {
+            return ExecuteRedisFunction(
+                serviceSettings:    serviceSettings, 
+                redisFunction:      redisDb => redisDb.StringGet(
+                                        stringGetParameters.Key
+                                    ), 
+                callSettings:       callSettings
+            );
+        }
+
+        private 
+        static
+        string 
+        ExecuteRedisFunction(
+            RedisServiceSettingsViewModel   serviceSettings,
+            Action<IDatabase>               redisFunction,
+            CallSettingsViewModel           callSettings)
+        {
             try
             {
-                var redis =
-                    ConnectionMultiplexer.Connect(serviceSettings.ServiceName + ".redis.cache.windows.net,password=" +
-                                                  serviceSettings.ServiceKey);
-                var redisDb = redis.GetDatabase();
+                var configurationString = string.Format(
+                    "{0}.redis.cache.windows.net,password={1}",
+                    serviceSettings.ServiceName, 
+                    serviceSettings.ServiceKey
+                );
+
+                var redisDb = ConnectionMultiplexer
+                    .Connect(configurationString)
+                    .GetDatabase();
 
                 var totalStopWatch = Stopwatch.StartNew();
 
                 Parallel.For(
-                    fromInclusive: 0,
-                    toExclusive: callSettings.NumberOfRepititions,
-                    parallelOptions: new ParallelOptions
-                    {
-                        MaxDegreeOfParallelism = callSettings.MaxConcurrentSubmissions
-                    },
-                    body: i => redisDb.StringGet(stringGetParameters.Key)
+                    fromInclusive:      0,
+                    toExclusive:        callSettings.NumberOfRepititions,
+                    parallelOptions:    new ParallelOptions {
+                                            MaxDegreeOfParallelism = callSettings.MaxConcurrentSubmissions
+                                        },
+                    body:               i => redisFunction(redisDb)
                 );
 
-                var totalElapsedMilliseconds = totalStopWatch.ElapsedMilliseconds;
-                var documentsPerSecond = callSettings.NumberOfRepititions / (totalElapsedMilliseconds / 1000.0);
-                var averageLatencyMilliseconds = (double)totalElapsedMilliseconds / callSettings.NumberOfRepititions;
+                var totalElapsedMilliseconds    = totalStopWatch.ElapsedMilliseconds;
+                var documentsPerSecond          = callSettings.NumberOfRepititions / (totalElapsedMilliseconds / 1000.0);
+                var averageLatencyMilliseconds  = (double)totalElapsedMilliseconds / callSettings.NumberOfRepititions;
 
                 return string.Format(
-                    "Get {0} items in {1}ms\r\nRate: {2}/sec @ {3}ms/set avg",
+                    "Set {0} items in {1}ms\r\nRate: {2}/sec @ {3}ms/set avg",
                     callSettings.NumberOfRepititions,
                     totalElapsedMilliseconds,
                     documentsPerSecond.ToString("0.00"),
