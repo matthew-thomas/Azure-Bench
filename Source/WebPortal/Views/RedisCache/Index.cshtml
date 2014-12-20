@@ -1,12 +1,20 @@
-﻿@model WebPortal.Controllers.RedisBenchView
+﻿@model WebPortal.Controllers.RedisBenchViewModel
 
 @{
     ViewBag.Title = "Azure Bench - Redis Cache";
 }
 
-<h2>Redis Cache</h2>
+<style>
+    .Results {
+        white-space: pre-line;
+    }    
+</style>
 
-@using (Ajax.BeginForm("StringSet", "RedisCache", new AjaxOptions { HttpMethod = "POST", UpdateTargetId = "result" }))
+<h1>Redis Cache</h1>
+
+<h2>StringSet</h2>
+
+@using (Ajax.BeginForm("StringSet", "RedisCache", new AjaxOptions { HttpMethod = "POST", UpdateTargetId = "StringSetResult" }))
 {
     @Html.LabelFor(model  => model.ServiceSettings)
     @Html.EditorFor(model => model.ServiceSettings)
@@ -17,7 +25,25 @@
     @Html.LabelFor(model  => model.CallSettings)
     @Html.EditorFor(model => model.CallSettings)
 
-    <input type="submit" value="Submit Cache Items" />
+    <input type="submit" value="Execute" />
 }
 
-<div id="result"></div>
+<div id="StringSetResult" class="Results"></div>
+
+<h2>StringGet</h2>
+
+@using (Ajax.BeginForm("StringGet", "RedisCache", new AjaxOptions { HttpMethod = "POST", UpdateTargetId = "StringGetResult" }))
+{
+    @Html.LabelFor(model  => model.ServiceSettings)
+    @Html.EditorFor(model => model.ServiceSettings)
+
+    @Html.LabelFor(model  => model.StringGetParameters)
+    @Html.EditorFor(model => model.StringGetParameters)
+
+    @Html.LabelFor(model  => model.CallSettings)
+    @Html.EditorFor(model => model.CallSettings)
+
+    <input type="submit" value="Execute" />
+}
+
+<div id="StringGetResult" class="Results"></div>
