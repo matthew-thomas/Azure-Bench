@@ -27,7 +27,7 @@ namespace WebPortal.Controllers
                 },
                 CallSettings = new CallSettingsViewModel {
                     NumberOfRepititions      = 1,
-                    MaxConcurrentSubmissions = 1,
+                    MaxDegreeOfParallelism = 1,
                 }
             };
 
@@ -93,7 +93,7 @@ namespace WebPortal.Controllers
                     fromInclusive:      0,
                     toExclusive:        callSettings.NumberOfRepititions,
                     parallelOptions:    new ParallelOptions {
-                                            MaxDegreeOfParallelism = callSettings.MaxConcurrentSubmissions
+                                            MaxDegreeOfParallelism = callSettings.MaxDegreeOfParallelism
                                         },
                     body:               i => redisFunction(redisDb)
                 );
@@ -146,6 +146,6 @@ namespace WebPortal.Controllers
     public class CallSettingsViewModel
     {
         public int NumberOfRepititions      { get; set; }
-        public int MaxConcurrentSubmissions { get; set; }        
+        public int MaxDegreeOfParallelism { get; set; }        
     }
 }
