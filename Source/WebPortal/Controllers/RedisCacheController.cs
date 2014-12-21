@@ -23,7 +23,7 @@ namespace WebPortal.Controllers
                     Value = "Example-Value"
                 },
                 StringGetParameters = new StringGetViewModel {
-                    Key = "Example-Key"
+                    Key   = "Example-Key"
                 },
                 ExecutionSettings = new ExecutionSettingsViewModel {
                     NumberOfRepititions      = 1,
@@ -47,7 +47,7 @@ namespace WebPortal.Controllers
                                         stringSetParameters.Key, 
                                         stringSetParameters.Value
                                     ),
-                executionSettings:       executionSettings
+                executionSettings:  executionSettings
             );
         }
 
@@ -63,7 +63,7 @@ namespace WebPortal.Controllers
                 redisFunction:      redisDb => redisDb.StringGet(
                                         stringGetParameters.Key
                                     ), 
-                executionSettings:       executionSettings
+                executionSettings:  executionSettings
             );
         }
 
@@ -73,19 +73,11 @@ namespace WebPortal.Controllers
         ExecuteRedisFunction(
             RedisServiceSettingsViewModel   serviceSettings,
             Action<IDatabase>               redisFunction,
-            ExecutionSettingsViewModel           executionSettings)
+            ExecutionSettingsViewModel      executionSettings)
         {
             try
             {
-                var configurationString = string.Format(
-                    "{0}.redis.cache.windows.net,password={1}",
-                    serviceSettings.ServiceName, 
-                    serviceSettings.ServiceKey
-                );
-
-                var redisDb = ConnectionMultiplexer
-                    .Connect(configurationString)
-                    .GetDatabase();
+                var redisDb = GetRedisDb(serviceSettings);
 
                 var totalStopWatch = Stopwatch.StartNew();
 
@@ -103,18 +95,34 @@ namespace WebPortal.Controllers
                 var averageLatencyMilliseconds  = (double)totalElapsedMilliseconds / executionSettings.NumberOfRepititions;
 
                 return string.Format(
-                    "Set {0} items in {1}ms\r\nRate: {2}/sec @ {3}ms/set avg",
+                    "Processed: {0} items in {1}ms\r\nRate: {2}/sec\r\nLatency: {3}ms avg. per request",
                     executionSettings.NumberOfRepititions,
                     totalElapsedMilliseconds,
                     documentsPerSecond.ToString("0.00"),
                     averageLatencyMilliseconds
                 );
-
             }
             catch (Exception exception)
             {
                 return exception.ToString();
             }
+        }
+
+        private 
+        static 
+        IDatabase 
+        GetRedisDb(
+            RedisServiceSettingsViewModel serviceSettings)
+        {
+            var configurationString = string.Format(
+                "{0}.redis.cache.windows.net,password={1}",
+                serviceSettings.ServiceName,
+                serviceSettings.ServiceKey
+            );
+
+            return ConnectionMultiplexer
+                .Connect(configurationString)
+                .GetDatabase();
         }
     }
 
