@@ -15,8 +15,8 @@ namespace WebPortal.Controllers
         {
             var defaultOptions = new RedisBenchViewModel {
                 ServiceSettings = new RedisServiceSettingsViewModel {
-                    ServiceName = "your-service-name-here",
-                    ServiceKey  = "your-service-key-here"
+                    ServiceName = "Your-Service-Name",
+                    ServiceKey  = "Your-Service-Key"
                 },
                 StringSetParameters = new StringSetViewModel {
                     Key   = "Example-Key",
@@ -25,7 +25,7 @@ namespace WebPortal.Controllers
                 StringGetParameters = new StringGetViewModel {
                     Key = "Example-Key"
                 },
-                CallSettings = new CallSettingsViewModel {
+                ExecutionSettings = new ExecutionSettingsViewModel {
                     NumberOfRepititions      = 1,
                     MaxDegreeOfParallelism = 1,
                 }
@@ -39,7 +39,7 @@ namespace WebPortal.Controllers
         StringSet(
             RedisServiceSettingsViewModel   serviceSettings,
             StringSetViewModel              stringSetParameters,
-            CallSettingsViewModel           callSettings)
+            ExecutionSettingsViewModel      executionSettings)
         {
             return ExecuteRedisFunction(
                 serviceSettings:    serviceSettings,
@@ -47,7 +47,7 @@ namespace WebPortal.Controllers
                                         stringSetParameters.Key, 
                                         stringSetParameters.Value
                                     ),
-                callSettings:       callSettings
+                executionSettings:       executionSettings
             );
         }
 
@@ -56,14 +56,14 @@ namespace WebPortal.Controllers
         StringGet(
             RedisServiceSettingsViewModel   serviceSettings,
             StringGetViewModel              stringGetParameters,
-            CallSettingsViewModel           callSettings)
+            ExecutionSettingsViewModel      executionSettings)
         {
             return ExecuteRedisFunction(
                 serviceSettings:    serviceSettings, 
                 redisFunction:      redisDb => redisDb.StringGet(
                                         stringGetParameters.Key
                                     ), 
-                callSettings:       callSettings
+                executionSettings:       executionSettings
             );
         }
 
@@ -73,7 +73,7 @@ namespace WebPortal.Controllers
         ExecuteRedisFunction(
             RedisServiceSettingsViewModel   serviceSettings,
             Action<IDatabase>               redisFunction,
-            CallSettingsViewModel           callSettings)
+            ExecutionSettingsViewModel           executionSettings)
         {
             try
             {
@@ -91,20 +91,20 @@ namespace WebPortal.Controllers
 
                 Parallel.For(
                     fromInclusive:      0,
-                    toExclusive:        callSettings.NumberOfRepititions,
+                    toExclusive:        executionSettings.NumberOfRepititions,
                     parallelOptions:    new ParallelOptions {
-                                            MaxDegreeOfParallelism = callSettings.MaxDegreeOfParallelism
+                                            MaxDegreeOfParallelism = executionSettings.MaxDegreeOfParallelism
                                         },
                     body:               i => redisFunction(redisDb)
                 );
 
                 var totalElapsedMilliseconds    = totalStopWatch.ElapsedMilliseconds;
-                var documentsPerSecond          = callSettings.NumberOfRepititions / (totalElapsedMilliseconds / 1000.0);
-                var averageLatencyMilliseconds  = (double)totalElapsedMilliseconds / callSettings.NumberOfRepititions;
+                var documentsPerSecond          = executionSettings.NumberOfRepititions / (totalElapsedMilliseconds / 1000.0);
+                var averageLatencyMilliseconds  = (double)totalElapsedMilliseconds / executionSettings.NumberOfRepititions;
 
                 return string.Format(
                     "Set {0} items in {1}ms\r\nRate: {2}/sec @ {3}ms/set avg",
-                    callSettings.NumberOfRepititions,
+                    executionSettings.NumberOfRepititions,
                     totalElapsedMilliseconds,
                     documentsPerSecond.ToString("0.00"),
                     averageLatencyMilliseconds
@@ -123,7 +123,7 @@ namespace WebPortal.Controllers
         [DisplayName("Service Settings")]   public RedisServiceSettingsViewModel    ServiceSettings     { get; set; }
         [DisplayName("StringSet Settings")] public StringSetViewModel               StringSetParameters { get; set; }
         [DisplayName("StringGet Settings")] public StringGetViewModel               StringGetParameters { get; set; }
-        [DisplayName("Call Settings")]      public CallSettingsViewModel            CallSettings        { get; set; }
+        [DisplayName("Execution Settings")] public ExecutionSettingsViewModel       ExecutionSettings   { get; set; }
     }
 
     public class RedisServiceSettingsViewModel
@@ -143,9 +143,9 @@ namespace WebPortal.Controllers
         public string Key { get; set; }
     }
 
-    public class CallSettingsViewModel
+    public class ExecutionSettingsViewModel
     {
         public int NumberOfRepititions      { get; set; }
-        public int MaxDegreeOfParallelism { get; set; }        
+        public int MaxDegreeOfParallelism   { get; set; }        
     }
 }

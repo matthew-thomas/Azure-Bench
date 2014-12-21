@@ -4,58 +4,76 @@
     ViewBag.Title = "Azure Bench - Redis Cache";
 }
 
-<style>
-    .Results {
-        white-space: pre-line;
-    }    
-</style>
+@section styles
+{
+    <style type="text/css">
+        .Results {
+            white-space: pre-line;
+        }
+
+        .RedisFunctionPane {
+            background-color: lightgray;
+            padding: 10px;
+        }
+
+        .FieldSection {
+            margin: 5px;
+        }
+
+        .FieldSection label {
+            font-weight: lighter;
+            float:       left;
+            width:       175px;
+        }
+    </style>
+}
 
 <h1>Redis Cache</h1>
 
 <div id="RedisFunctions">
     <h2>StringSet</h2>
-    <div>
-        @using (Ajax.BeginForm("StringSet", "RedisCache", new AjaxOptions {HttpMethod = "POST", UpdateTargetId = "StringSetResult"}))
+    <div class="RedisFunctionPane">
+        @using (Ajax.BeginForm("StringSet", "RedisCache", new AjaxOptions { HttpMethod = "POST", UpdateTargetId = "StringSetResults" }))
         {
-            @Html.LabelFor(model  => model.ServiceSettings)
-            @Html.EditorFor(model => model.ServiceSettings)
-
+            @Html.LabelFor(model => model.ServiceSettings)
+            <div class="FieldSection">@Html.EditorFor(model => model.ServiceSettings)</div>
+            
             @Html.LabelFor(model  => model.StringSetParameters)
-            @Html.EditorFor(model => model.StringSetParameters)
+            <div class="FieldSection">@Html.EditorFor(model => model.StringSetParameters)</div>
 
-            @Html.LabelFor(model  => model.CallSettings)
-            @Html.EditorFor(model => model.CallSettings)
+            @Html.LabelFor(model  => model.ExecutionSettings)
+            <div class="FieldSection">@Html.EditorFor(model => model.ExecutionSettings)</div>
 
             <input type="submit" value="Execute"/>
         }
 
-        <div id="StringSetResult" class="Results"></div>
+        <div id="StringSetResults" class="Results"></div>
     </div>
 
     <h2>StringGet</h2>
-    <div>
-        @using (Ajax.BeginForm("StringGet", "RedisCache", new AjaxOptions { HttpMethod = "POST", UpdateTargetId = "StringGetResult" }))
+    <div class="RedisFunctionPane">
+        @using (Ajax.BeginForm("StringGet", "RedisCache", new AjaxOptions { HttpMethod = "POST", UpdateTargetId = "StringGetResults" }))
         {
-            @Html.LabelFor(model  => model.ServiceSettings)
-            @Html.EditorFor(model => model.ServiceSettings)
-
-            @Html.LabelFor(model  => model.StringGetParameters)
-            @Html.EditorFor(model => model.StringGetParameters)
-
-            @Html.LabelFor(model  => model.CallSettings)
-            @Html.EditorFor(model => model.CallSettings)
+            @Html.LabelFor(model => model.ServiceSettings)
+            <div class="FieldSection">@Html.EditorFor(model => model.ServiceSettings)</div>
+            
+            @Html.LabelFor(model => model.StringGetParameters)
+            <div class="FieldSection">@Html.EditorFor(model => model.StringGetParameters)</div>
+            
+            @Html.LabelFor(model  => model.ExecutionSettings)
+            <div class="FieldSection">@Html.EditorFor(model => model.ExecutionSettings)</div>
 
             <input type="submit" value="Execute" />
         }
 
-        <div id="StringGetResult" class="Results"></div>
+        <div id="StringGetResults" class="Results"></div>
     </div>
 </div>
 
 @section scripts {
     <script type="text/javascript">
         $(function() {
-            $('#RedisFunctions').accordion();
+            $('#RedisFunctions').accordion({heightStyle:"content"});
         });
     </script>
 }
