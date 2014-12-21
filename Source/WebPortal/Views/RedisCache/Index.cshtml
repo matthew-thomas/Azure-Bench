@@ -39,14 +39,17 @@
 
 <h1>Redis Cache</h1>
 
+@Html.LabelFor(model => model.ServiceSettings)
+<div class="FieldSection">@Html.EditorFor(model => model.ServiceSettings)</div>
+
 <div id="RedisFunctions">
     <h2>StringSet</h2>
     <div class="RedisFunctionPane">
-        @using (Ajax.BeginForm("StringSet", "RedisCache", new AjaxOptions { HttpMethod = "POST", UpdateTargetId = "StringSetResults" }))
+        @using (Ajax.BeginForm("StringSet", "RedisCache", new AjaxOptions { UpdateTargetId = "StringSetResults" }))
         {
-            @Html.LabelFor(model => model.ServiceSettings)
-            <div class="FieldSection">@Html.EditorFor(model => model.ServiceSettings)</div>
-            
+            @Html.HiddenFor(model => model.ServiceSettings.ServiceName)
+            @Html.HiddenFor(model => model.ServiceSettings.ServiceKey)
+
             @Html.LabelFor(model  => model.StringSetParameters)
             <div class="FieldSection">@Html.EditorFor(model => model.StringSetParameters)</div>
 
@@ -61,11 +64,11 @@
 
     <h2>StringGet</h2>
     <div class="RedisFunctionPane">
-        @using (Ajax.BeginForm("StringGet", "RedisCache", new AjaxOptions { HttpMethod = "POST", UpdateTargetId = "StringGetResults" }))
+        @using (Ajax.BeginForm("StringGet", "RedisCache", new AjaxOptions { UpdateTargetId = "StringGetResults" }))
         {
-            @Html.LabelFor(model => model.ServiceSettings)
-            <div class="FieldSection">@Html.EditorFor(model => model.ServiceSettings)</div>
-            
+            @Html.HiddenFor(model => model.ServiceSettings.ServiceName)
+            @Html.HiddenFor(model => model.ServiceSettings.ServiceKey)
+
             @Html.LabelFor(model => model.StringGetParameters)
             <div class="FieldSection">@Html.EditorFor(model => model.StringGetParameters)</div>
             
@@ -83,6 +86,14 @@
     <script type="text/javascript">
         $(function() {
             $('#RedisFunctions').accordion({heightStyle:"content"});
+        });
+
+        $('input[type=submit]').click(function() {
+            var masterServiceName = $('#ServiceSettings_ServiceName').val();
+            var masterServiceKey  = $('#ServiceSettings_ServiceKey').val();
+
+            $(this).siblings('#ServiceSettings_ServiceName').val(masterServiceName);
+            $(this).siblings('#ServiceSettings_ServiceKey').val(masterServiceKey);
         });
     </script>
 }
