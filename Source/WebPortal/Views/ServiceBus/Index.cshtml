@@ -1,0 +1,47 @@
+﻿@model WebPortal.Controllers.ServiceBusBenchViewModel
+
+@{
+    ViewBag.Title = "Azure Bench - Service Bus";
+}
+
+<h1>Service Bus</h1>
+
+@Html.LabelFor(model => model.ServiceSettings)
+<div class="FieldSection">@Html.EditorFor(model => model.ServiceSettings)</div>
+
+<div id="ServiceBusFunctions">
+    <h2>QueueClient.SendAsync</h2>
+    <div class="ServiceBusFunctionPane">
+        @using (Ajax.BeginForm("SendAsync", "ServiceBus", new AjaxOptions {UpdateTargetId = "SendAsyncResults"}))
+        {
+            @Html.HiddenFor(model => model.ServiceSettings.Namespace)
+            @Html.HiddenFor(model => model.ServiceSettings.AccessKey)
+
+            @Html.LabelFor(model => model.SendAsyncParameters)
+            <div class="FieldSection">@Html.EditorFor(model => model.SendAsyncParameters)</div>
+
+            @Html.LabelFor(model => model.ExecutionSettings)
+            <div class="FieldSection">@Html.EditorFor(model => model.ExecutionSettings)</div>
+
+            <input type="submit" value="Execute"/>
+        }
+
+        <div id="SendAsyncResults" class="Results"></div>
+    </div>
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        $(function() {
+            $('#ServiceBusFunctions').accordion({ heightStyle: "content" });
+        });
+
+        $('input[type=submit]').click(function() {
+            var masterServiceNamespace = $('#ServiceSettings_Namespace').val();
+            var masterServiceAccessKey = $('#ServiceSettings_AccessKey').val();
+
+            $(this).siblings('#ServiceSettings_Namespace').val(masterServiceNamespace);
+            $(this).siblings('#ServiceSettings_AccessKey').val(masterServiceAccessKey);
+        });
+    </script>
+}

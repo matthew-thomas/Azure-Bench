@@ -1,9 +1,10 @@
-﻿using System;
+﻿using StackExchange.Redis;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Web.Mvc;
-using StackExchange.Redis;
+using WebPortal.Models;
 
 namespace WebPortal.Controllers
 {
@@ -149,11 +150,5 @@ namespace WebPortal.Controllers
     public class StringGetViewModel
     {
         public string Key { get; set; }
-    }
-
-    public class ExecutionSettingsViewModel
-    {
-        public int NumberOfRepititions      { get; set; }
-        public int MaxDegreeOfParallelism   { get; set; }        
     }
 }
