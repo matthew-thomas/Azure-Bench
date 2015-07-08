@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using Microsoft.ServiceBus.Messaging;
 using System.Threading.Tasks;
 using System.Web.Mvc;
@@ -54,9 +56,28 @@ namespace WebPortal.Controllers
 
                 var client = QueueClient.CreateFromConnectionString(serviceBusConnectionString, sendAsyncParameters.Path);
 
-                await client.SendAsync(new BrokeredMessage(sendAsyncParameters.BrokeredMessagePayload));
+                var totalStopWatch = Stopwatch.StartNew();
 
-                return "Der!";
+                Parallel.For(
+                    fromInclusive:      0,
+                    toExclusive:        executionSettings.NumberOfRepititions,
+                    parallelOptions:    new ParallelOptions {
+                                            MaxDegreeOfParallelism = executionSettings.MaxDegreeOfParallelism
+                                        },
+                    body:               i => client.Send(new BrokeredMessage(sendAsyncParameters.BrokeredMessagePayload) { MessageId = i.ToString() })
+                );
+
+                var totalElapsedMilliseconds   = totalStopWatch.ElapsedMilliseconds;
+                var messagesPerSecond          = executionSettings.NumberOfRepititions / (totalElapsedMilliseconds / 1000.0);
+                var averageLatencyMilliseconds = (double)totalElapsedMilliseconds / executionSettings.NumberOfRepititions;
+                
+                return string.Format(
+                    "Submitted {0} messages in {1}ms\r\nCalculated Rates: {2}/sec @ {3}ms/msg avg",
+                    executionSettings.NumberOfRepititions,
+                    totalElapsedMilliseconds,
+                    messagesPerSecond.ToString("0.00"),
+                    averageLatencyMilliseconds
+                );
             }
             catch (Exception ex)
             {
