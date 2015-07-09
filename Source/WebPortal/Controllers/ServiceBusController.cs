@@ -81,7 +81,7 @@ namespace WebPortal.Controllers
             }
             catch (Exception ex)
             {
-                return ex.Message;
+                return ex.ToString();
             }
         }
     }
