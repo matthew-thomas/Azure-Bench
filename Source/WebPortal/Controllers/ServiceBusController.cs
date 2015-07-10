@@ -3,6 +3,7 @@ using Microsoft.ServiceBus.Messaging;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Mvc;
@@ -26,7 +27,7 @@ namespace WebPortal.Controllers
                 QueueSettings       = new ServiceBusQueueSettingsViewModel {
                                         Path                    = "Your-Queue-Name"
                                     },
-                SendAsyncParameters = new SendAsyncViewModel {
+                SendParameters = new SendAsyncViewModel {
                                         BrokeredMessagePayload  = "{SomeProperty:1}"
                                     },
                 ReceiveParameters   = new ReceiveParametersViewModel {
@@ -43,7 +44,7 @@ namespace WebPortal.Controllers
 
         public 
         async Task<string>
-        SendAsync(
+        Send(
             ServiceBusServiceSettingsViewModel  serviceSettings,
             ServiceBusQueueSettingsViewModel    queueSettings,
             SendAsyncViewModel                  sendAsyncParameters,
@@ -62,6 +63,7 @@ namespace WebPortal.Controllers
                 if (!await namespaceManager.QueueExistsAsync(queueSettings.Path))
                     await namespaceManager.CreateQueueAsync(queueSettings.Path);
 
+                var sendId = Guid.NewGuid().ToString("N");
                 var client = QueueClient.CreateFromConnectionString(serviceBusConnectionString, queueSettings.Path);
 
                 var totalStopWatch = Stopwatch.StartNew();
@@ -72,7 +74,7 @@ namespace WebPortal.Controllers
                     parallelOptions:    new ParallelOptions {
                                             MaxDegreeOfParallelism = executionSettings.MaxDegreeOfParallelism
                                         },
-                    body:               i => client.Send(new BrokeredMessage(sendAsyncParameters.BrokeredMessagePayload) { MessageId = i.ToString() })
+                    body:               i => client.Send(new BrokeredMessage(sendAsyncParameters.BrokeredMessagePayload) { MessageId = sendId + "-" + i })
                 );
 
                 var totalElapsedMilliseconds   = totalStopWatch.ElapsedMilliseconds;
@@ -80,7 +82,8 @@ namespace WebPortal.Controllers
                 var averageLatencyMilliseconds = (double)totalElapsedMilliseconds / executionSettings.NumberOfRepititions;
                 
                 return string.Format(
-                    "Submitted {0} messages in {1}ms\r\nCalculated Rates: {2}/sec @ {3}ms/msg avg",
+                    "[{0}] Submitted {1} messages in {2}ms\r\nCalculated Rates: {3}/sec @ {4}ms/msg avg",
+                    sendId,
                     executionSettings.NumberOfRepititions,
                     totalElapsedMilliseconds,
                     messagesPerSecond.ToString("0.00"),
@@ -95,7 +98,7 @@ namespace WebPortal.Controllers
 
         public 
         string
-        ProcessQueueMessages(
+        Receive(
             ServiceBusServiceSettingsViewModel  serviceSettings,
             ServiceBusQueueSettingsViewModel    queueSettings,
             ReceiveParametersViewModel          receiveParameters,
@@ -115,7 +118,7 @@ namespace WebPortal.Controllers
                     ReceiveMode.ReceiveAndDelete
                 );
 
-                var messages = new ConcurrentDictionary<string, string>();
+                var messages = new ConcurrentStack<string>();
                 
                 var totalStopWatch = Stopwatch.StartNew();
 
@@ -130,7 +133,7 @@ namespace WebPortal.Controllers
 
                                             if (message != null)
                                             {
-                                                messages.TryAdd(message.MessageId, message.GetBody<string>());
+                                                messages.Push(message.MessageId);
                                             }
                                         }
                 );
@@ -141,7 +144,7 @@ namespace WebPortal.Controllers
 
                 var messageLog = new StringBuilder();
 
-                messages.ForEach(pair => messageLog.AppendFormat("{0} {1}\r\n", pair.Key, pair.Value));
+                messages.ForEach(messageId => messageLog.AppendFormat("{0}\r\n", messageId));
 
                 return string.Format(
                     "Received {0} messages in {1}ms\r\nCalculated Rates: {2}/sec @ {3}ms/msg avg:\r\n{4}",
@@ -175,7 +178,7 @@ namespace WebPortal.Controllers
     {
         public ServiceBusServiceSettingsViewModel   ServiceSettings     { get; set; }
         public ServiceBusQueueSettingsViewModel     QueueSettings       { get; set; }
-        public SendAsyncViewModel                   SendAsyncParameters { get; set; }
+        public SendAsyncViewModel                   SendParameters { get; set; }
         public ExecutionSettingsViewModel           ExecutionSettings   { get; set; }
         public ReceiveParametersViewModel           ReceiveParameters   { get; set; }
     }
