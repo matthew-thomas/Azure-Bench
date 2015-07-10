@@ -9,6 +9,9 @@
 @Html.LabelFor(model => model.ServiceSettings)
 <div class="FieldSection">@Html.EditorFor(model => model.ServiceSettings)</div>
 
+@Html.LabelFor(model => model.QueueSettings)
+<div class="FieldSection">@Html.EditorFor(model => model.QueueSettings)</div>
+
 <div id="ServiceBusFunctions">
     <h2>QueueClient.SendAsync</h2>
     <div class="ServiceBusFunctionPane">
@@ -16,6 +19,7 @@
         {
             @Html.HiddenFor(model => model.ServiceSettings.Namespace)
             @Html.HiddenFor(model => model.ServiceSettings.AccessKey)
+            @Html.HiddenFor(model => model.QueueSettings.Path)
 
             @Html.LabelFor(model => model.SendAsyncParameters)
             <div class="FieldSection">@Html.EditorFor(model => model.SendAsyncParameters)</div>
@@ -27,6 +31,26 @@
         }
 
         <div id="SendAsyncResults" class="Results"></div>
+    </div>
+
+    <h2>QueueClient.Receive</h2>
+    <div class="ServiceBusFunctionPane">
+        @using (Ajax.BeginForm("ProcessQueueMessages", "ServiceBus", new AjaxOptions { UpdateTargetId = "ReceiveResults" }))
+        {
+            @Html.HiddenFor(model => model.ServiceSettings.Namespace)
+            @Html.HiddenFor(model => model.ServiceSettings.AccessKey)
+            @Html.HiddenFor(model => model.QueueSettings.Path)
+
+            @Html.LabelFor(model => model.ReceiveParameters)
+            <div class="FieldSection">@Html.EnumDropDownListFor(model => model.ReceiveParameters.ReceiveMode)</div>
+
+            @Html.LabelFor(model => model.ExecutionSettings)
+            <div class="FieldSection">@Html.EditorFor(model => model.ExecutionSettings)</div>
+
+            <input type="submit" value="Execute" />
+        }
+
+        <div id="ReceiveResults" class="Results"></div>
     </div>
 </div>
 
