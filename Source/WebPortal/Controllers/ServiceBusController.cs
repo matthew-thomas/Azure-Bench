@@ -21,21 +21,21 @@ namespace WebPortal.Controllers
             var defaultOptions = new ServiceBusBenchViewModel
             {
                 ServiceSettings     = new ServiceBusServiceSettingsViewModel {
-                                        Namespace               = "Your-Namespace",
-                                        AccessKey               = "Your-Access-Key"
+                                        Namespace                       = "Your-Namespace",
+                                        AccessKey                       = "Your-Access-Key"
                                     },
                 QueueSettings       = new ServiceBusQueueSettingsViewModel {
-                                        Path                    = "Your-Queue-Name"
+                                        Path                            = "Your-Queue-Name"
                                     },
-                SendParameters = new SendAsyncViewModel {
-                                        BrokeredMessagePayload  = "{SomeProperty:1}"
+                SendParameters = new SendViewModel {
+                                        BrokeredMessagePayloadSizeBytes = 1024
                                     },
                 ReceiveParameters   = new ReceiveParametersViewModel {
-                                        ReceiveMode             = ReceiveMode.PeekLock
+                                        ReceiveMode                     = ReceiveMode.PeekLock
                                     },
                 ExecutionSettings   = new ExecutionSettingsViewModel {
-                                        NumberOfRepititions     = 1,
-                                        MaxDegreeOfParallelism  = 1
+                                        NumberOfRepititions             = 1,
+                                        MaxDegreeOfParallelism          = 1
                                     }
             };
 
@@ -47,7 +47,7 @@ namespace WebPortal.Controllers
         Send(
             ServiceBusServiceSettingsViewModel  serviceSettings,
             ServiceBusQueueSettingsViewModel    queueSettings,
-            SendAsyncViewModel                  sendAsyncParameters,
+            SendViewModel                  sendParameters,
             ExecutionSettingsViewModel          executionSettings)
         {
             try
@@ -63,9 +63,9 @@ namespace WebPortal.Controllers
                 if (!await namespaceManager.QueueExistsAsync(queueSettings.Path))
                     await namespaceManager.CreateQueueAsync(queueSettings.Path);
 
-                var sendId = Guid.NewGuid().ToString("N");
-                var client = QueueClient.CreateFromConnectionString(serviceBusConnectionString, queueSettings.Path);
-
+                var sendId         = Guid.NewGuid().ToString("N");
+                var client         = QueueClient.CreateFromConnectionString(serviceBusConnectionString, queueSettings.Path);
+                var payload        = new byte[sendParameters.BrokeredMessagePayloadSizeBytes];
                 var totalStopWatch = Stopwatch.StartNew();
 
                 Parallel.For(
@@ -74,7 +74,7 @@ namespace WebPortal.Controllers
                     parallelOptions:    new ParallelOptions {
                                             MaxDegreeOfParallelism = executionSettings.MaxDegreeOfParallelism
                                         },
-                    body:               i => client.Send(new BrokeredMessage(sendAsyncParameters.BrokeredMessagePayload) { MessageId = sendId + "-" + i })
+                    body:               i => client.Send(new BrokeredMessage(payload) { MessageId = sendId + "-" + i })
                 );
 
                 var totalElapsedMilliseconds   = totalStopWatch.ElapsedMilliseconds;
@@ -178,7 +178,7 @@ namespace WebPortal.Controllers
     {
         public ServiceBusServiceSettingsViewModel   ServiceSettings     { get; set; }
         public ServiceBusQueueSettingsViewModel     QueueSettings       { get; set; }
-        public SendAsyncViewModel                   SendParameters { get; set; }
+        public SendViewModel                        SendParameters      { get; set; }
         public ExecutionSettingsViewModel           ExecutionSettings   { get; set; }
         public ReceiveParametersViewModel           ReceiveParameters   { get; set; }
     }
@@ -193,9 +193,9 @@ namespace WebPortal.Controllers
         public ReceiveMode ReceiveMode { get; set; }
     }
 
-    public class SendAsyncViewModel
+    public class SendViewModel
     {
-        public string BrokeredMessagePayload { get; set; }
+        public int BrokeredMessagePayloadSizeBytes { get; set; }
     }
 
     public class ServiceBusServiceSettingsViewModel
