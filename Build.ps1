@@ -1,3 +1,5 @@
+Write-Host $env:PATH
+
 # Install chocolately if it's not already installed
 if (-not ($env:Path -ilike "*chocolatey*")) {
     Write-Host "Chocolatey not found in PATH environment variable, installing Chocolatey..."
