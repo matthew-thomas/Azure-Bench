@@ -6,7 +6,11 @@ if (-not ($env:Path -ilike "*chocolatey*")) {
 }
 
 # Make sure all other required dependencies are installed...
-cinst nuget.commandline --version 2.8.6 --confirm
+cinst nuget.commandline --version 2.8.6  --confirm
+cinst invokemsbuild     --version 1.5.17 --confirm
 
 # Make sure all NuGet packages are installed...
 nuget restore .\Source
+
+# Build the solution
+Invoke-MsBuild ".\Source\Azure Bench.sln"
